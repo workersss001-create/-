@@ -5,11 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>公文簽呈管理系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 列印時僅印出套印表單，隱藏背景與按鈕 */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
 
   <!-- 頂部導覽列 -->
-  <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+  <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 no-print">
     <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
         <span class="text-blue-600">📄</span> 公文簽呈管理系統
@@ -27,7 +51,7 @@
   </header>
 
   <!-- 主要內容區 -->
-  <main class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+  <main class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 no-print">
 
     <!-- 頁籤一：填寫簽呈單 -->
     <div id="viewCreate">
@@ -114,7 +138,7 @@
           </div>
         </section>
 
-        <!-- 區塊三：稅務明細（選擇「稅務公文」時動態顯示） -->
+        <!-- 區塊三：稅務明細 -->
         <section id="taxSection" class="hidden bg-purple-50/60 rounded-lg p-6 border border-purple-200 space-y-4">
           <div class="flex justify-between items-center border-b border-purple-200 pb-3">
             <h2 class="text-lg font-bold text-purple-900 flex items-center gap-2">
@@ -125,10 +149,8 @@
             </button>
           </div>
 
-          <!-- 項目列表容器 -->
           <div id="taxItemsContainer" class="space-y-3"></div>
 
-          <!-- 合計金額 -->
           <div class="flex justify-end items-center gap-3 pt-3 border-t border-purple-200 font-bold text-purple-900">
             <span>合計金額：</span>
             <span class="text-xl font-mono text-purple-700">NT$ <span id="totalAmountText">0</span></span>
@@ -176,14 +198,108 @@
 
   </main>
 
+  <!-- 🖨️ 列印彈出視窗（Modal） -->
+  <div id="printModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start p-4 overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-6 p-6 sm:p-8 relative">
+      
+      <!-- 控制列印與關閉按鈕 -->
+      <div class="flex justify-between items-center pb-4 mb-6 border-b border-gray-200 no-print">
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded shadow text-sm flex items-center gap-1.5 transition">
+            <span>🖨️ 列印 / 存成 PDF</span>
+          </button>
+          <button onclick="closePrintModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2 rounded text-sm transition">
+            關閉
+          </button>
+        </div>
+        <span class="text-xs text-gray-400">標準公文簽呈格式</span>
+      </div>
+
+      <!-- 正式公文簽呈套印表格區域 -->
+      <div id="printArea" class="bg-white text-gray-900 font-sans space-y-6">
+        
+        <!-- 公司名稱與大標題 -->
+        <div class="text-center space-y-1 pb-4 border-b-2 border-gray-800">
+          <h1 id="p_company" class="text-2xl font-bold tracking-widest text-gray-900">太綺水電工程有限公司</h1>
+          <h2 class="text-xl font-bold tracking-wider text-gray-800">公 文 簽 呈 單</h2>
+        </div>
+
+        <!-- 基本資料表格 -->
+        <table class="w-full border-collapse border border-gray-800 text-sm">
+          <tbody>
+            <tr>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5 w-24">單號</td>
+              <td id="p_docId" class="border border-gray-800 p-2.5 font-mono">---</td>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5 w-24">公文類別</td>
+              <td id="p_category" class="border border-gray-800 p-2.5">---</td>
+            </tr>
+            <tr>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5">申請部門</td>
+              <td id="p_department" class="border border-gray-800 p-2.5">---</td>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5">緊急程度</td>
+              <td id="p_urgency" class="border border-gray-800 p-2.5">---</td>
+            </tr>
+            <tr>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5">申請人</td>
+              <td id="p_applicant" class="border border-gray-800 p-2.5">---</td>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5">申請日期</td>
+              <td id="p_applyDate" class="border border-gray-800 p-2.5">---</td>
+            </tr>
+            <tr>
+              <td class="border border-gray-800 bg-gray-50 font-bold p-2.5">主旨</td>
+              <td id="p_subject" colspan="3" class="border border-gray-800 p-2.5 font-bold text-base">---</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 說明與詳細背景 -->
+        <div class="border border-gray-800 p-4 min-h-[140px] space-y-2">
+          <div class="font-bold text-gray-800 border-b border-gray-300 pb-1 mb-2">【說明與詳細背景】</div>
+          <div id="p_content" class="text-sm whitespace-pre-wrap leading-relaxed text-gray-800">---</div>
+        </div>
+
+        <!-- 稅務金額明細（稅務公文自動顯示） -->
+        <div id="p_taxBlock" class="border border-gray-800 p-4 space-y-2 hidden">
+          <div class="font-bold text-gray-800 border-b border-gray-300 pb-1 mb-2">【稅務金額明細】</div>
+          <div id="p_taxItems" class="text-sm whitespace-pre-wrap font-mono text-gray-800">---</div>
+          <div id="p_totalAmount" class="text-right font-bold text-base border-t border-gray-200 pt-2 text-purple-900">合計金額：NT$ 0</div>
+        </div>
+
+        <!-- 審核主管與會簽簽名欄 -->
+        <table class="w-full border-collapse border border-gray-800 text-sm text-center">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-800">
+              <th class="border border-gray-800 p-2 w-1/5">總經理</th>
+              <th class="border border-gray-800 p-2 w-1/5">審核主管</th>
+              <th class="border border-gray-800 p-2 w-1/5">會簽部門</th>
+              <th class="border border-gray-800 p-2 w-1/5">部門主管</th>
+              <th class="border border-gray-800 p-2 w-1/5">經辦人</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="h-24">
+              <td class="border border-gray-800 p-2"></td>
+              <td class="border border-gray-800 p-2"></td>
+              <td id="p_reviewDepts" class="border border-gray-800 p-2 text-xs align-top pt-2">---</td>
+              <td class="border border-gray-800 p-2"></td>
+              <td id="p_signApplicant" class="border border-gray-800 p-2 align-bottom font-bold pb-2">---</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript 邏輯 -->
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxDuBxh_bV7KoglCV5fDp2hjGqoGfuvfxzYqRcAyP3QsLgE-ozDpDDaQxyJX_1r90zI/exec";
+    // 填入最新部署的 GAS API 網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyH-SkpJEcM5ies2SRbxkpIz7ul7TT1QFqYLH6QpMTfEwpR8i_gQiNKC9w3sKKEV-9J/exec";
 
-    // 自動預設今天日期
+    let globalListData = []; // 儲存清單資料
+
     document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
 
-    // 切換是否顯示「稅務明細」
     function toggleTaxSection() {
       const category = document.getElementById("docCategory").value;
       const taxSection = document.getElementById("taxSection");
@@ -197,7 +313,6 @@
       }
     }
 
-    // 新增一列稅務項目
     function addTaxRow() {
       const container = document.getElementById("taxItemsContainer");
       const rowId = "tax_row_" + Date.now();
@@ -220,7 +335,6 @@
       container.appendChild(div);
     }
 
-    // 刪除一列稅務項目
     function removeTaxRow(rowId) {
       const el = document.getElementById(rowId);
       if (el) {
@@ -229,7 +343,6 @@
       }
     }
 
-    // 計算稅務總金額
     function calculateTaxTotal() {
       let total = 0;
       document.querySelectorAll(".tax-amount").forEach(input => {
@@ -239,7 +352,6 @@
       document.getElementById("totalAmountText").innerText = total.toLocaleString();
     }
 
-    // 切換頁籤
     function switchTab(tab) {
       const tabCreate = document.getElementById("tabCreate");
       const tabList = document.getElementById("tabList");
@@ -270,7 +382,9 @@
         const result = await res.json();
 
         if (result.status === "success" && result.data.length > 0) {
-          container.innerHTML = result.data.map(item => {
+          globalListData = result.data; // 寫入全域變數供列印開啟
+
+          container.innerHTML = result.data.map((item, index) => {
             let urgencyColor = "bg-gray-100 text-gray-700";
             if (item.urgency === "急件") urgencyColor = "bg-orange-100 text-orange-800 border border-orange-200";
             if (item.urgency === "特急件") urgencyColor = "bg-red-100 text-red-800 font-bold border border-red-200";
@@ -304,7 +418,11 @@
 
                 <div class="text-xs text-gray-500 flex flex-wrap justify-between items-center pt-2 border-t border-gray-100">
                   <span>公司：<strong class="text-gray-700">${item.company || '太綺水電工程有限公司'}</strong> | 申請人：${item.applicant} (${item.department})</span>
-                  <span>申請日期：${item.applyDate}</span>
+                  
+                  <!-- 列印按鈕 -->
+                  <button onclick="openPrintModal(${index})" class="mt-2 sm:mt-0 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-3 py-1 rounded transition text-xs flex items-center gap-1">
+                    <span>🖨️ 列印簽呈單</span>
+                  </button>
                 </div>
               </div>
             `;
@@ -316,6 +434,39 @@
         container.innerHTML = '<p class="text-red-500 text-center py-8">載入失敗，請確認網路或 API 設定！</p>';
         console.error(err);
       }
+    }
+
+    // 開啟列印彈窗並填入公文資料
+    function openPrintModal(index) {
+      const item = globalListData[index];
+      if (!item) return;
+
+      document.getElementById('p_company').innerText = item.company || '太綺水電工程有限公司';
+      document.getElementById('p_docId').innerText = item.docId || '---';
+      document.getElementById('p_category').innerText = item.docCategory || '一般公文';
+      document.getElementById('p_department').innerText = item.department || '---';
+      document.getElementById('p_urgency').innerText = item.urgency || '普通';
+      document.getElementById('p_applicant').innerText = item.applicant || '---';
+      document.getElementById('p_signApplicant').innerText = item.applicant || '---';
+      document.getElementById('p_applyDate').innerText = item.applyDate || '---';
+      document.getElementById('p_subject').innerText = item.subject || '---';
+      document.getElementById('p_content').innerText = item.content || '---';
+      document.getElementById('p_reviewDepts').innerText = item.reviewDepts ? item.reviewDepts : '無';
+
+      const taxBlock = document.getElementById('p_taxBlock');
+      if (item.docCategory === '稅務公文') {
+        taxBlock.classList.remove('hidden');
+        document.getElementById('p_taxItems').innerText = item.taxItems ? item.taxItems.split('；').join('\n') : '無明細';
+        document.getElementById('p_totalAmount').innerText = '合計金額：NT$ ' + Number(item.totalAmount || 0).toLocaleString();
+      } else {
+        taxBlock.classList.add('hidden');
+      }
+
+      document.getElementById('printModal').classList.remove('hidden');
+    }
+
+    function closePrintModal() {
+      document.getElementById('printModal').classList.add('hidden');
     }
 
     // 表單送出
