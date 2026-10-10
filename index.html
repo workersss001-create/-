@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>公文簽呈管理系統</title>
-  <!-- 載入 Tailwind CSS 樣式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
@@ -13,122 +12,228 @@
   <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
     <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <span class="text-blue-600">📄</span> 公文簽呈系統
+        <span class="text-blue-600">📄</span> 公文簽呈管理系統
       </h1>
       <div class="text-sm text-gray-600">
-        申請人：<span class="font-semibold text-gray-800">王大明 (TC100-001)</span>
+        目前使用者：<span id="currentUser" class="font-semibold text-gray-800">楊雅淇</span>
       </div>
     </div>
     
-    <!-- 功能頁籤 (Tab) -->
+    <!-- 功能頁籤 -->
     <div class="max-w-4xl mx-auto px-4 flex gap-6 border-t border-gray-100 text-sm font-medium">
-      <button class="py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold">填寫簽呈單</button>
-      <button class="py-2.5 text-gray-500 hover:text-gray-700">我的簽呈單</button>
+      <button id="tabCreate" onclick="switchTab('create')" class="py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition">填寫簽呈單</button>
+      <button id="tabList" onclick="switchTab('list')" class="py-2.5 text-gray-500 hover:text-gray-700 transition">我的簽呈單</button>
     </div>
   </header>
 
-  <!-- 主要表單內容區 -->
+  <!-- 主要內容區 -->
   <main class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-    <form id="signForm" class="space-y-6">
 
-      <!-- 區塊一：基本資訊 -->
-      <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-        <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-          <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 基本資訊
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">簽呈類型 <span class="text-red-500">*</span></label>
-            <select id="type" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-              <option value="一般簽呈">一般簽呈</option>
-              <option value="專案請准">專案請准</option>
-              <option value="人事異動">人事異動</option>
-              <option value="採購簽呈">採購簽呈</option>
-              <option value="合約審查">合約審查</option>
-            </select>
-          </div>
+    <!-- 頁籤一：填寫簽呈單 -->
+    <div id="viewCreate">
+      <form id="signForm" class="space-y-6">
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">保密層級 <span class="text-red-500">*</span></label>
-            <select id="securityLevel" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-              <option value="普通">普通</option>
-              <option value="密">密</option>
-              <option value="機密">機密</option>
-            </select>
-          </div>
+        <!-- 區塊一：公文基本資料 -->
+        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
+            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 公文基本資料
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 公文類別 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">公文類別 <span class="text-red-500">*</span></label>
+              <select id="docCategory" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="一般公文">1. 一般公文</option>
+                <option value="稅務公文">2. 稅務公文</option>
+              </select>
+            </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">申請部門 <span class="text-red-500">*</span></label>
-            <input type="text" id="department" value="行政管理部" required class="w-full border border-gray-300 rounded-md p-2 bg-gray-50">
-          </div>
+            <!-- 緊急程度 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">緊急程度 <span class="text-red-500">*</span></label>
+              <select id="urgency" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="普通">普通</option>
+                <option value="急件">急件</option>
+                <option value="特急件">特急件</option>
+              </select>
+            </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">申請日期</label>
-            <input type="date" id="date" value="2026-10-10" class="w-full border border-gray-300 rounded-md p-2 bg-gray-50">
-          </div>
-        </div>
-      </section>
+            <!-- 申請人 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">申請人 <span class="text-red-500">*</span></label>
+              <input type="text" id="applicant" value="楊雅淇" required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
 
-      <!-- 區塊二：簽呈主旨與內文 -->
-      <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-        <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-          <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 簽呈內容
-        </h2>
+            <!-- 申請部門 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">申請部門 <span class="text-red-500">*</span></label>
+              <select id="department" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="行政部">行政部</option>
+                <option value="工程部">工程部</option>
+                <option value="會計部">會計部</option>
+                <option value="管理部">管理部</option>
+              </select>
+            </div>
 
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">主旨 <span class="text-red-500">*</span></label>
-            <input type="text" id="subject" placeholder="請用一句話簡明說明簽呈目的" required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">說明（詳細內文） <span class="text-red-500">*</span></label>
-            <textarea id="content" rows="5" placeholder="請詳細說明簽呈背景、原因及具體規劃..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-          </div>
-        </div>
-      </section>
-
-      <!-- 區塊三：擬辦事項與會簽部門 -->
-      <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-        <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-          <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 擬辦方案與會簽設定
-        </h2>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">建議擬辦事項</label>
-            <textarea id="proposal" rows="2" placeholder="提案人之建議處理方式（例如：擬請准予辦理採購...）" class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">需會簽部門（可複選）</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-md border border-gray-200 text-sm">
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="財務部" class="rounded text-blue-600"> 財務部</label>
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="法務部" class="rounded text-blue-600"> 法務部</label>
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="資訊部" class="rounded text-blue-600"> 資訊部</label>
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="總務部" class="rounded text-blue-600"> 總務部</label>
+            <!-- 申請日期 -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">申請日期 <span class="text-red-500">*</span></label>
+              <input type="date" id="applyDate" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- 底部送出按鈕與提示 -->
-      <div class="pt-2">
-        <p class="text-xs text-gray-500 mb-3 text-center">送出後系統將自動依會簽與關卡流程通知相關簽核主管。</p>
-        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition duration-200 flex justify-center items-center gap-2">
-          <span>送出簽呈單</span>
-        </button>
+        <!-- 區塊二：簽呈內容 -->
+        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
+            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 簽呈內容
+          </h2>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">簽呈主旨 <span class="text-red-500">*</span></label>
+              <input type="text" id="subject" placeholder="請輸入本次簽呈主旨..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">說明與詳細背景 <span class="text-red-500">*</span></label>
+              <textarea id="content" rows="5" placeholder="請詳細說明簽呈背景原因、說明事項或補充資訊..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- 區塊三：擬辦事項與會簽 -->
+        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+          <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
+            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 擬辦事項與會簽
+          </h2>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">建議擬辦事項</label>
+              <textarea id="proposal" rows="2" placeholder="提案人之建議處理方式..." class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">需會簽部門（可複選）</label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-md border border-gray-200 text-sm">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="財務部" class="rounded text-blue-600"> 財務部</label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="法務部" class="rounded text-blue-600"> 法務部</label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="資訊部" class="rounded text-blue-600"> 資訊部</label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="總務部" class="rounded text-blue-600"> 總務部</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 底部按鈕 -->
+        <div class="pt-2">
+          <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition duration-200 flex justify-center items-center gap-2">
+            <span>送出公文簽呈</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- 頁籤二：我的簽呈單列表 -->
+    <div id="viewList" class="hidden space-y-4">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-bold text-gray-800">歷史公文紀錄</h2>
+        <button onclick="loadSignList()" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">重新整理</button>
       </div>
 
-    </form>
+      <div id="listContainer" class="space-y-3">
+        <p class="text-gray-500 text-center py-8">載入中...</p>
+      </div>
+    </div>
+
   </main>
 
-  <!-- JavaScript 邏輯處理 -->
+  <!-- JavaScript 邏輯 -->
   <script>
-    // 已自動填入您的 Google Apps Script Web App URL
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbygUSTlkbyFIbxQbKlYwBBdxjRboPqF16Nonz8cTHufk2k11wSgEphasLXvtlCyjsFZ/exec";
+    // 已更新為您最新的 GAS API 網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxDuBxh_bV7KoglCV5fDp2hjGqoGfuvfxzYqRcAyP3QsLgE-ozDpDDaQxyJX_1r90zI/exec";
 
+    // 自動預設今天日期
+    document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
+
+    // 切換頁籤
+    function switchTab(tab) {
+      const tabCreate = document.getElementById("tabCreate");
+      const tabList = document.getElementById("tabList");
+      const viewCreate = document.getElementById("viewCreate");
+      const viewList = document.getElementById("viewList");
+
+      if (tab === 'create') {
+        tabCreate.className = "py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition";
+        tabList.className = "py-2.5 text-gray-500 hover:text-gray-700 transition";
+        viewCreate.classList.remove("hidden");
+        viewList.classList.add("hidden");
+      } else {
+        tabList.className = "py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition";
+        tabCreate.className = "py-2.5 text-gray-500 hover:text-gray-700 transition";
+        viewList.classList.remove("hidden");
+        viewCreate.classList.add("hidden");
+        loadSignList();
+      }
+    }
+
+    // 載入公文列表
+    async function loadSignList() {
+      const container = document.getElementById("listContainer");
+      container.innerHTML = '<p class="text-gray-500 text-center py-8">資料載入中...</p>';
+
+      try {
+        const res = await fetch(GAS_WEB_APP_URL);
+        const result = await res.json();
+
+        if (result.status === "success" && result.data.length > 0) {
+          container.innerHTML = result.data.map(item => {
+            let urgencyColor = "bg-gray-100 text-gray-700";
+            if (item.urgency === "急件") urgencyColor = "bg-orange-100 text-orange-800 border border-orange-200";
+            if (item.urgency === "特急件") urgencyColor = "bg-red-100 text-red-800 font-bold border border-red-200";
+
+            return `
+              <div class="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow transition space-y-3">
+                <div class="flex justify-between items-start border-b pb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold px-2.5 py-1 rounded ${item.docCategory === '稅務公文' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
+                      ${item.docCategory}
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded ${urgencyColor}">
+                      ${item.urgency}
+                    </span>
+                    <span class="text-xs text-gray-400 font-mono">${item.docId}</span>
+                  </div>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">${item.status}</span>
+                </div>
+
+                <div>
+                  <h3 class="font-bold text-gray-800 text-base mb-1">${item.subject}</h3>
+                  <p class="text-sm text-gray-600 line-clamp-2">${item.content}</p>
+                </div>
+
+                ${item.proposal ? `<div class="text-xs bg-gray-50 p-2 rounded text-gray-600 border border-gray-100">💡 擬辦：${item.proposal}</div>` : ''}
+
+                <div class="text-xs text-gray-500 flex flex-wrap justify-between items-center pt-2 border-t border-gray-100">
+                  <span>申請人：<strong class="text-gray-700">${item.applicant}</strong> (${item.department})</span>
+                  <span>申請日期：${item.applyDate}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = '<p class="text-gray-500 text-center py-8">目前尚無任何公文紀錄。</p>';
+        }
+      } catch (err) {
+        container.innerHTML = '<p class="text-red-500 text-center py-8">載入失敗，請確認網路或 API 設定！</p>';
+        console.error(err);
+      }
+    }
+
+    // 表單送出
     document.getElementById("signForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       
@@ -136,18 +241,17 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<span>傳送中...</span>`;
 
-      // 收集勾選的會簽部門
       const selectedDepts = [];
       document.querySelectorAll('input[name="reviewDept"]:checked').forEach(cb => {
         selectedDepts.push(cb.value);
       });
 
-      // 打包要傳給 Google Apps Script 的資料
       const payload = {
-        applicant: "王大明",
+        docCategory: document.getElementById("docCategory").value,
+        urgency: document.getElementById("urgency").value,
+        applicant: document.getElementById("applicant").value,
         department: document.getElementById("department").value,
-        type: document.getElementById("type").value,
-        securityLevel: document.getElementById("securityLevel").value,
+        applyDate: document.getElementById("applyDate").value,
         subject: document.getElementById("subject").value,
         content: document.getElementById("content").value,
         proposal: document.getElementById("proposal").value,
@@ -163,8 +267,10 @@
         const result = await response.json();
 
         if (result.status === "success") {
-          alert(`🎉 簽呈送出成功！\n簽呈單號：${result.docId}`);
+          alert(`🎉 公文送出成功！\n公文單號：${result.docId}`);
           document.getElementById("signForm").reset();
+          document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
+          switchTab('list');
         } else {
           alert("❌ 送出失敗：" + result.message);
         }
@@ -173,7 +279,7 @@
         console.error(err);
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>送出簽呈單</span>`;
+        submitBtn.innerHTML = `<span>送出公文簽呈</span>`;
       }
     });
   </script>
