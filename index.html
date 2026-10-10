@@ -126,8 +126,8 @@
 
   <!-- JavaScript 邏輯處理 -->
   <script>
-    // ⚠️ 請填入您在 Google Apps Script 部署後取得的 Web App URL
-    const GAS_WEB_APP_URL = "您的_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+    // 已自動填入您的 Google Apps Script Web App URL
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbygUSTlkbyFIbxQbKlYwBBdxjRboPqF16Nonz8cTHufk2k11wSgEphasLXvtlCyjsFZ/exec";
 
     document.getElementById("signForm").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -137,7 +137,7 @@
       submitBtn.innerHTML = `<span>傳送中...</span>`;
 
       // 收集勾選的會簽部門
-      const selectedDepts = [https://script.google.com/macros/s/AKfycbygUSTlkbyFIbxQbKlYwBBdxjRboPqF16Nonz8cTHufk2k11wSgEphasLXvtlCyjsFZ/exec];
+      const selectedDepts = [];
       document.querySelectorAll('input[name="reviewDept"]:checked').forEach(cb => {
         selectedDepts.push(cb.value);
       });
