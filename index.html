@@ -6,7 +6,7 @@
   <title>公文簽呈管理系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 列印時僅印出套印表單，隱藏導覽與按鈕 */
+    /* 列印時僅印出套印表單 */
     @media print {
       body * {
         visibility: hidden;
@@ -64,7 +64,7 @@
           </h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 所屬公司名稱 -->
+            <!-- 所屬公司名稱 (共 5 項) -->
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">所屬公司名稱 <span class="text-red-500">*</span></label>
               <select id="company" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -72,6 +72,8 @@
                 <option value="太綺水電工程有限公司">太綺水電工程有限公司</option>
                 <option value="匠人本紀永續控股股份有限公司">匠人本紀永續控股股份有限公司</option>
                 <option value="橡欣立工程有限公司">橡欣立工程有限公司</option>
+                <option value="匠人本紀綠能股份有限公司">匠人本紀綠能股份有限公司</option>
+                <option value="匠人本紀工程股份有限公司">匠人本紀工程股份有限公司</option>
               </select>
             </div>
 
@@ -100,18 +102,13 @@
               <input type="text" id="applicant" value="楊雅淇" required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
             </div>
 
-            <!-- 申請部門 -->
+            <!-- 申請部門 (固定會計部) -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">申請部門 <span class="text-red-500">*</span></label>
-              <select id="department" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="行政部">行政部</option>
-                <option value="工程部">工程部</option>
-                <option value="會計部">會計部</option>
-                <option value="管理部">管理部</option>
-              </select>
+              <input type="text" id="department" value="會計部" required class="w-full border border-gray-300 rounded-md p-2 bg-gray-50 focus:outline-none">
             </div>
 
-            <!-- 申請日期 -->
+            <!-- 申請日期 (預設當下日期，可手動調整) -->
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">申請日期 <span class="text-red-500">*</span></label>
               <input type="date" id="applyDate" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -248,7 +245,7 @@
           <div id="p_totalAmount" class="text-right font-bold text-base border-t border-gray-200 pt-2 text-purple-900">合計金額：NT$ 0</div>
         </div>
 
-        <!-- 審核主管簽名欄（請款單樣式） -->
+        <!-- 審核主管簽名欄 -->
         <table class="w-full border-collapse border border-gray-900 text-sm text-center">
           <thead>
             <tr class="bg-gray-100 border-b border-gray-900 font-bold">
@@ -278,6 +275,7 @@
 
     let globalListData = [];
 
+    // 自動預設今天日期 (YYYY-MM-DD)
     document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
 
     function toggleTaxSection() {
