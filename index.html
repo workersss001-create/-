@@ -40,10 +40,21 @@
           </h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 所屬公司名稱 -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">所屬公司名稱 <span class="text-red-500">*</span></label>
+              <select id="company" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">請選擇所屬公司</option>
+                <option value="太綺水電工程有限公司">太綺水電工程有限公司</option>
+                <option value="匠人本紀永續控股股份有限公司">匠人本紀永續控股股份有限公司</option>
+                <option value="橡欣立工程有限公司">橡欣立工程有限公司</option>
+              </select>
+            </div>
+
             <!-- 公文類別 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">公文類別 <span class="text-red-500">*</span></label>
-              <select id="docCategory" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <select id="docCategory" onchange="toggleTaxSection()" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="一般公文">1. 一般公文</option>
                 <option value="稅務公文">2. 稅務公文</option>
               </select>
@@ -98,31 +109,45 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">說明與詳細背景 <span class="text-red-500">*</span></label>
-              <textarea id="content" rows="5" placeholder="請詳細說明簽呈背景原因、說明事項或補充資訊..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+              <textarea id="content" rows="4" placeholder="請詳細說明簽呈背景原因、說明事項或補充資訊..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
             </div>
           </div>
         </section>
 
-        <!-- 區塊三：擬辦事項與會簽 -->
+        <!-- 區塊三：稅務明細（選擇「稅務公文」時動態顯示） -->
+        <section id="taxSection" class="hidden bg-purple-50/60 rounded-lg p-6 border border-purple-200 space-y-4">
+          <div class="flex justify-between items-center border-b border-purple-200 pb-3">
+            <h2 class="text-lg font-bold text-purple-900 flex items-center gap-2">
+              <span>💰</span> 稅務金額明細
+            </h2>
+            <button type="button" onclick="addTaxRow()" class="text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded transition flex items-center gap-1 shadow-sm">
+              <span>＋ 新增項目</span>
+            </button>
+          </div>
+
+          <!-- 項目列表容器 -->
+          <div id="taxItemsContainer" class="space-y-3"></div>
+
+          <!-- 合計金額 -->
+          <div class="flex justify-end items-center gap-3 pt-3 border-t border-purple-200 font-bold text-purple-900">
+            <span>合計金額：</span>
+            <span class="text-xl font-mono text-purple-700">NT$ <span id="totalAmountText">0</span></span>
+          </div>
+        </section>
+
+        <!-- 區塊四：會簽設定 -->
         <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
           <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 擬辦事項與會簽
+            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 會簽設定
           </h2>
 
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">建議擬辦事項</label>
-              <textarea id="proposal" rows="2" placeholder="提案人之建議處理方式..." class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">需會簽部門（可複選）</label>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-md border border-gray-200 text-sm">
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="財務部" class="rounded text-blue-600"> 財務部</label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="法務部" class="rounded text-blue-600"> 法務部</label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="資訊部" class="rounded text-blue-600"> 資訊部</label>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="總務部" class="rounded text-blue-600"> 總務部</label>
-              </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">需會簽部門（可複選）</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3 rounded-md border border-gray-200 text-sm">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="財務部" class="rounded text-blue-600"> 財務部</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="法務部" class="rounded text-blue-600"> 法務部</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="資訊部" class="rounded text-blue-600"> 資訊部</label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="reviewDept" value="總務部" class="rounded text-blue-600"> 總務部</label>
             </div>
           </div>
         </section>
@@ -153,11 +178,66 @@
 
   <!-- JavaScript 邏輯 -->
   <script>
-    // 已更新為您最新的 GAS API 網址
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxDuBxh_bV7KoglCV5fDp2hjGqoGfuvfxzYqRcAyP3QsLgE-ozDpDDaQxyJX_1r90zI/exec";
 
     // 自動預設今天日期
     document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
+
+    // 切換是否顯示「稅務明細」
+    function toggleTaxSection() {
+      const category = document.getElementById("docCategory").value;
+      const taxSection = document.getElementById("taxSection");
+      if (category === "稅務公文") {
+        taxSection.classList.remove("hidden");
+        if (document.querySelectorAll(".tax-row").length === 0) {
+          addTaxRow();
+        }
+      } else {
+        taxSection.classList.add("hidden");
+      }
+    }
+
+    // 新增一列稅務項目
+    function addTaxRow() {
+      const container = document.getElementById("taxItemsContainer");
+      const rowId = "tax_row_" + Date.now();
+      const div = document.createElement("div");
+      div.className = "tax-row grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded border border-purple-200 shadow-sm";
+      div.id = rowId;
+
+      div.innerHTML = `
+        <div class="col-span-6 sm:col-span-7">
+          <input type="text" placeholder="稅務說明項目 (如: 營業稅、所得稅...)" class="tax-desc w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-purple-500 focus:outline-none">
+        </div>
+        <div class="col-span-5 sm:col-span-4">
+          <input type="number" placeholder="金額 NT$" oninput="calculateTaxTotal()" class="tax-amount w-full border border-gray-300 rounded p-1.5 text-sm font-mono text-right focus:ring-1 focus:ring-purple-500 focus:outline-none">
+        </div>
+        <div class="col-span-1 text-center">
+          <button type="button" onclick="removeTaxRow('${rowId}')" class="text-red-500 hover:text-red-700 font-bold text-sm p-1">✕</button>
+        </div>
+      `;
+
+      container.appendChild(div);
+    }
+
+    // 刪除一列稅務項目
+    function removeTaxRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) {
+        el.remove();
+        calculateTaxTotal();
+      }
+    }
+
+    // 計算稅務總金額
+    function calculateTaxTotal() {
+      let total = 0;
+      document.querySelectorAll(".tax-amount").forEach(input => {
+        const val = parseFloat(input.value) || 0;
+        total += val;
+      });
+      document.getElementById("totalAmountText").innerText = total.toLocaleString();
+    }
 
     // 切換頁籤
     function switchTab(tab) {
@@ -215,10 +295,15 @@
                   <p class="text-sm text-gray-600 line-clamp-2">${item.content}</p>
                 </div>
 
-                ${item.proposal ? `<div class="text-xs bg-gray-50 p-2 rounded text-gray-600 border border-gray-100">💡 擬辦：${item.proposal}</div>` : ''}
+                ${item.docCategory === '稅務公文' && item.taxItems ? `
+                  <div class="text-xs bg-purple-50 p-2.5 rounded text-purple-900 border border-purple-100 space-y-1">
+                    <div class="font-bold">💰 稅務明細：${item.taxItems}</div>
+                    <div class="text-right font-bold text-purple-700">合計金額：NT$ ${Number(item.totalAmount || 0).toLocaleString()}</div>
+                  </div>
+                ` : ''}
 
                 <div class="text-xs text-gray-500 flex flex-wrap justify-between items-center pt-2 border-t border-gray-100">
-                  <span>申請人：<strong class="text-gray-700">${item.applicant}</strong> (${item.department})</span>
+                  <span>公司：<strong class="text-gray-700">${item.company || '太綺水電工程有限公司'}</strong> | 申請人：${item.applicant} (${item.department})</span>
                   <span>申請日期：${item.applyDate}</span>
                 </div>
               </div>
@@ -246,15 +331,32 @@
         selectedDepts.push(cb.value);
       });
 
+      const taxCategory = document.getElementById("docCategory").value;
+      const taxList = [];
+      let totalAmount = 0;
+
+      if (taxCategory === "稅務公文") {
+        document.querySelectorAll(".tax-row").forEach(row => {
+          const desc = row.querySelector(".tax-desc").value.trim();
+          const amt = parseFloat(row.querySelector(".tax-amount").value) || 0;
+          if (desc || amt) {
+            taxList.push(`${desc}: NT$${amt.toLocaleString()}`);
+            totalAmount += amt;
+          }
+        });
+      }
+
       const payload = {
-        docCategory: document.getElementById("docCategory").value,
+        company: document.getElementById("company").value,
+        docCategory: taxCategory,
         urgency: document.getElementById("urgency").value,
         applicant: document.getElementById("applicant").value,
         department: document.getElementById("department").value,
         applyDate: document.getElementById("applyDate").value,
         subject: document.getElementById("subject").value,
         content: document.getElementById("content").value,
-        proposal: document.getElementById("proposal").value,
+        taxItems: taxList.join("；"),
+        totalAmount: totalAmount,
         reviewDepts: selectedDepts.join("、")
       };
 
@@ -270,6 +372,7 @@
           alert(`🎉 公文送出成功！\n公文單號：${result.docId}`);
           document.getElementById("signForm").reset();
           document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
+          toggleTaxSection();
           switchTab('list');
         } else {
           alert("❌ 送出失敗：" + result.message);
