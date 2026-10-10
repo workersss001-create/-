@@ -64,7 +64,7 @@
           </h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 所屬公司名稱 (共 5 項) -->
+            <!-- 所屬公司名稱 (根據您的基本資料試算表) -->
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">所屬公司名稱 <span class="text-red-500">*</span></label>
               <select id="company" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -72,8 +72,8 @@
                 <option value="太綺水電工程有限公司">太綺水電工程有限公司</option>
                 <option value="匠人本紀永續控股股份有限公司">匠人本紀永續控股股份有限公司</option>
                 <option value="橡欣立工程有限公司">橡欣立工程有限公司</option>
-                <option value="匠人本紀綠能股份有限公司">匠人本紀綠能股份有限公司</option>
-                <option value="匠人本紀工程股份有限公司">匠人本紀工程股份有限公司</option>
+                <option value="匠人太初有限公司">匠人太初有限公司</option>
+                <option value="漆特廊塗裝股份有限公司">漆特廊塗裝股份有限公司</option>
               </select>
             </div>
 
@@ -108,7 +108,7 @@
               <input type="text" id="department" value="會計部" required class="w-full border border-gray-300 rounded-md p-2 bg-gray-50 focus:outline-none">
             </div>
 
-            <!-- 申請日期 (預設當下日期，可手動調整) -->
+            <!-- 申請日期 (預設當下日期) -->
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1">申請日期 <span class="text-red-500">*</span></label>
               <input type="date" id="applyDate" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -135,7 +135,7 @@
           </div>
         </section>
 
-        <!-- 區塊三：稅務明細 (選擇稅務公文時動態顯示) -->
+        <!-- 區塊三：稅務明細 (選擇稅務公文時顯示) -->
         <section id="taxSection" class="hidden bg-purple-50/60 rounded-lg p-6 border border-purple-200 space-y-4">
           <div class="flex justify-between items-center border-b border-purple-200 pb-3">
             <h2 class="text-lg font-bold text-purple-900 flex items-center gap-2">
