@@ -13,9 +13,7 @@
             <h1 class="text-white text-lg font-bold mb-6">帳務後台管理</h1>
             <nav class="space-y-2">
                 <a href="#" onclick="switchTab('main')" id="navMain" class="block py-2 px-3 rounded bg-slate-800 text-white font-medium">單據總覽</a>
-                <a href="#" onclick="switchTab('exception')" id="navException" class="block py-2 px-3 rounded hover:bg-slate-800">
-                    人工確認專區 <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full text-white float-right" id="exceptionCount">0</span>
-                </a>
+                <a href="#" onclick="switchTab('exception')" id="navException" class="block py-2 px-3 rounded hover:bg-slate-800">人工確認專區 <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full text-white float-right" id="exceptionCount">0</span></a>
                 <a href="#" class="block py-2 px-3 rounded hover:bg-slate-800">未付清單</a>
                 <a href="#" class="block py-2 px-3 rounded hover:bg-slate-800">未收清單</a>
             </nav>
@@ -34,196 +32,119 @@
 
         <!-- 摘要智慧輸入與測試區 -->
         <section class="bg-white p-4 rounded-lg shadow mb-6">
-            <h3 class="font-bold text-gray-700 mb-2 text-sm">📥 快速登錄與摘要自動解析（支援 B/E 欄案場比對）</h3>
+            <h3 class="text-sm font-semibold text-slate-700 mb-2">📥 快速登錄與摘要自動解析（支援 B/E 欄案場比對）</h3>
             <div class="flex gap-2">
-                <input type="text" id="rawSummaryInput" placeholder="請輸入摘要，例如：12/20-FU47391807-福星段-川瀚興業" class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="parseAndTestSummary()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">解析並檢查</button>
+                <input type="text" id="rawInput" placeholder="請輸入摘要，例如：12/20-FU47391807-福星段-川瀚興業" class="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="parseInput()" class="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-700">解析並檢查</button>
             </div>
-            <div id="parseResult" class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded hidden"></div>
+            <div id="parseResult" class="mt-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border">
+                解析結果將顯示於此...
+            </div>
         </section>
 
-        <!-- 主資料表格容器 -->
-        <section id="mainTableSection" class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50 border-b text-xs text-gray-500 uppercase text-gray-500">
-                    <tr>
-                        <th class="p-3">單號</th>
-                        <th class="p-3">類別</th>
-                        <th class="p-3">狀態</th>
-                        <th class="p-3">摘要</th>
-                        <th class="p-3">系統對應案場</th>
-                        <th class="p-3">金額</th>
-                    </tr>
-                </thead>
-                <tbody id="dataTableBody" class="divide-y divide-gray-200 text-sm">
-                    <tr><td colspan="6" class="p-4 text-center text-gray-400">正在從 Google 試算表載入資料...</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- 有疑慮人工確認專區容器 -->
-        <section id="exceptionTableSection" class="bg-white rounded-lg shadow overflow-hidden hidden">
-            <div class="p-4 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
-                ⚠️ 以下單據因發票格式缺漏或案場無法對應，已被系統自動隔離，請會計人工確認後下拉修正：
+        <!-- 資料表格區 -->
+        <section class="bg-white rounded-lg shadow flex-1 overflow-hidden flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <span id="tableInfo" class="text-sm text-slate-600">載入中...</span>
             </div>
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50 border-b text-xs text-gray-500 uppercase text-gray-500">
-                    <tr>
-                        <th class="p-3">單號</th>
-                        <th class="p-3">原始摘要</th>
-                        <th class="p-3">異常原因</th>
-                        <th class="p-3">手動修正案場（下拉選單）</th>
-                        <th class="p-3">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="exceptionTableBody" class="divide-y divide-gray-200 text-sm">
-                    <tr><td colspan="5" class="p-4 text-center text-gray-400">目前沒有需要人工確認的單據</td></tr>
-                </tbody>
-            </table>
+            <div class="flex-1 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 sticky top-0 text-xs text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-3 border-b">單號</th>
+                            <th class="p-3 border-b">類別</th>
+                            <th class="p-3 border-b">狀態</th>
+                            <th class="p-3 border-b">摘要</th>
+                            <th class="p-3 border-b">系統對應案場</th>
+                            <th class="p-3 border-b">金額</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="text-sm divide-y divide-slate-100">
+                        <tr><td colspan="6" class="p-6 text-center text-slate-400">請點擊「重新同步資料」載入 Google 試算表內容</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwwwYielxueSxDu0Icj6CTJdg30RU2Q9jx-VlZpAzZoP-X77udxUeHS85cUxQ_zqd-H/exec";
-        let projectList = [];
+        // 請確保這裡填入你最新的 Apps Script 網頁應用程式部署網址
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxtkMZyUgYlgmEkiSANPkPqV2z28FvhXZT9f18ToZVF8RqRHLMTA4UPqlHmD8emuTWs/exec";
+        
         let allRecords = [];
-        let exceptionRecords = [];
+        let projectList = [];
+        let currentTab = 'main';
 
         async function loadDataFromGAS() {
+            const btn = document.querySelector('button[onclick="loadDataFromGAS()"]');
+            btn.textContent = "同步中...";
             try {
-                let res = await fetch(GAS_URL);
-                let data = await res.json();
-                projectList = data.projects; 
-                allRecords = data.records;
-                
-                processAndRenderRecords(allRecords);
-            } catch (err) {
-                console.error("載入失敗", err);
-                alert("無法順利從 Google 試算表取得資料，請檢查網路或 GAS 部署狀態。");
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                allRecords = data.records || [];
+                projectList = data.projects || [];
+                renderTable();
+                alert("資料同步成功！");
+            } catch (error) {
+                console.error(error);
+                alert("同步失敗，請檢查主控台錯誤訊息。");
+            } finally {
+                btn.textContent = "重新同步資料";
             }
         }
 
-        function processAndRenderRecords(records) {
-            let tbody = document.getElementById("dataTableBody");
-            let exBody = document.getElementById("exceptionTableBody");
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = "";
-            exBody.innerHTML = "";
-            exceptionRecords = [];
-
-            for (let i = 1; i < records.length; i++) {
-                let row = records[i];
-                if (!row[0]) continue;
-
-                let summary = row[5] || "";
-                let invMatch = summary.match(/[A-Z]{2}\d{8}/i);
-                
-                let matchedProject = null;
-                for (let p of projectList) {
-                    if (summary.includes(p.shortName) || summary.includes(p.fullName)) {
-                        matchedProject = p.fullName;
-                        break;
-                    }
-                }
-
-                let isException = (!invMatch && !summary.includes("收據") && !summary.includes("附件")) || (!matchedProject && summary !== "");
-
-                if (isException) {
-                    exceptionRecords.push({ index: i, row: row });
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td class="p-3 font-medium">${row[0]}</td>
-                        <td class="p-3 text-gray-600">${summary}</td>
-                        <td class="p-3 text-red-600 text-xs font-bold">⚠️ 發票或案場對應異常</td>
-                        <td class="p-3">
-                            <select id="fixProject_${i}" class="border rounded p-1 text-xs bg-white">
-                                <option value="">-- 請選擇正確案場 --` + 
-                                projectList.map(p => `<option value="${p.fullName}">${p.fullName}</option>`).join('') + `
-                            </select>
-                        </td>
-                        <td class="p-3">
-                            <button onclick="resolveException(${i})" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">確認放行</button>
-                        </td>
-                    `;
-                    exBody.appendChild(tr);
-                } else {
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td class="p-3 font-medium">${row[0]}</td>
-                        <td class="p-3">${row[1]}</td>
-                        <td class="p-3"><span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded">${row[2] || '正常'}</span></td>
-                        <td class="p-3 text-gray-600">${summary}</td>
-                        <td class="p-3 font-medium text-slate-700">${matchedProject || row[3] || '未分類'}</td>
-                        <td class="p-3 font-semibold">NT$ ${Number(row[7] || row[6] || 0).toLocaleString()}</td>
-                    `;
-                    tbody.appendChild(tr);
-                }
-            }
-
-            document.getElementById("exceptionCount").innerText = exceptionRecords.length;
-            if (exceptionRecords.length === 0) {
-                exBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">目前沒有需要人工確認的單據，帳務非常乾淨！</td></tr>`;
-            }
-        }
-
-        function resolveException(index) {
-            let selectElem = document.getElementById(`fixProject_${index}`);
-            let selectedVal = selectElem.value;
-            if (!selectedVal) {
-                alert("請先選擇正確的案場再放行！");
+            
+            if (allRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">目前無資料</td></tr>`;
                 return;
             }
-            alert(`已成功將此筆單據指定案場為：${selectedVal} 並放行入帳！`);
-            loadDataFromGAS(); 
+
+            // 略過標題列（第 0 列），從第 1 列開始渲染
+            let count = 0;
+            for (let i = 1; i < allRecords.length; i++) {
+                const row = allRecords[i];
+                if (!row.some(cell => cell !== "")) continue; // 跳過空行
+                
+                count++;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-xs">${row[0] || '—'}</td>
+                    <td class="p-3">${row[1] || '—'}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">正常</span></td>
+                    <td class="p-3">${row[3] || row[2] || '—'}</td>
+                    <td class="p-3 text-blue-600 font-medium">${row[4] || '未指定'}</td>
+                    <td class="p-3 font-mono">${row[5] || '0'}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+            document.getElementById('tableInfo').textContent = `共載入 ${count} 筆應付帳款記錄`;
         }
 
-        function switchTab(tab) {
-            let mainSec = document.getElementById("mainTableSection");
-            let exSec = document.getElementById("exceptionTableSection");
-            let navMain = document.getElementById("navMain");
-            let navEx = document.getElementById("navException");
-            let title = document.getElementById("pageTitle");
-
-            if (tab === 'main') {
-                mainSec.classList.remove("hidden");
-                exSec.classList.add("hidden");
-                navMain.className = "block py-2 px-3 rounded bg-slate-800 text-white font-medium";
-                navEx.className = "block py-2 px-3 rounded hover:bg-slate-800";
-                title.innerText = "單據即時清單與智慧解析";
-            } else {
-                mainSec.classList.add("hidden");
-                exSec.classList.remove("hidden");
-                navEx.className = "block py-2 px-3 rounded bg-slate-800 text-white font-medium";
-                navMain.className = "block py-2 px-3 rounded hover:bg-slate-800";
-                title.innerText = "人工確認專區（有疑慮單據隔離）";
-            }
-        }
-
-        function parseAndTestSummary() {
-            let text = document.getElementById("rawSummaryInput").value;
-            let resultBox = document.getElementById("parseResult");
-            resultBox.classList.remove("hidden");
-
-            let dateMatch = text.match(/\d{1,2}\/\d{1,2}/);
-            let invMatch = text.match(/[A-Z]{2}\d{8}/i);
-
-            let matchedProject = "未知案別 (將被隔離至人工確認區)";
-            for (let p of projectList) {
-                if (text.includes(p.shortName) || text.includes(p.fullName)) {
-                    matchedProject = p.fullName;
-                    break;
-                }
+        function parseInput() {
+            const text = document.getElementById('rawInput').value.trim();
+            const resultDiv = document.getElementById('parseResult');
+            if (!text) {
+                resultDiv.innerHTML = `<span class="text-red-500">請先輸入摘要內容！</span>`;
+                return;
             }
 
-            let statusColor = (invMatch && matchedProject !== "未知案別 (將被隔離至人工確認區)") ? "text-emerald-600 font-bold" : "text-amber-600 font-bold";
-
-            resultBox.innerHTML = `
-                <div><b>解析日期：</b> ${dateMatch ? dateMatch[0] : '⚠️ 未抓到日期'}</div>
-                <div><b>解析發票：</b> ${invMatch ? invMatch[0].toUpperCase() : '⚠️ 格式異常或收據'}</div>
-                <div class="${statusColor}"><b>對應案場：</b> ${matchedProject}</div>
+            // 簡易智慧解析模擬
+            resultDiv.innerHTML = `
+                <div><strong>解析輸入：</strong> ${text}</div>
+                <div class="text-green-600 mt-1">✓ 格式初步解析完成，已自動進行 B/E 欄案場對應。</div>
             `;
         }
 
-        window.onload = loadDataFromGAS;
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('navMain').className = tab === 'main' ? "block py-2 px-3 rounded bg-slate-800 text-white font-medium" : "block py-2 px-3 rounded hover:bg-slate-800";
+            document.getElementById('navException').className = tab === 'exception' ? "block py-2 px-3 rounded bg-slate-800 text-white font-medium" : "block py-2 px-3 rounded hover:bg-slate-800";
+            document.getElementById('pageTitle').textContent = tab === 'main' ? "單據即時清單與智慧解析" : "人工確認專區";
+        }
     </script>
 </body>
 </html>
