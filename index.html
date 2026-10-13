@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>工程請款／付款管理系統（智慧解析與人工確認版）</title>
+    <title>工程請款／付款管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex h-screen overflow-hidden">
@@ -24,23 +24,11 @@
     <!-- 右側主要內容區 -->
     <main class="flex-1 flex flex-col overflow-y-auto p-6">
         <header class="flex justify-between items-center mb-6">
-            <h2 id="pageTitle" class="text-2xl font-bold text-slate-800">單據即時清單與智慧解析</h2>
+            <h2 id="pageTitle" class="text-2xl font-bold text-slate-800">單據即時清單</h2>
             <div class="space-x-2">
                 <button onclick="loadDataFromGAS()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 text-sm">重新同步資料</button>
             </div>
         </header>
-
-        <!-- 摘要智慧輸入與測試區 -->
-        <section class="bg-white p-4 rounded-lg shadow mb-6">
-            <h3 class="text-sm font-semibold text-slate-700 mb-2">📥 快速登錄與摘要自動解析（支援 B/E 欄案場比對）</h3>
-            <div class="flex gap-2">
-                <input type="text" id="rawInput" placeholder="請輸入摘要，例如：12/20-FU47391807-福星段-川瀚興業" class="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="parseInput()" class="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-700">解析並檢查</button>
-            </div>
-            <div id="parseResult" class="mt-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border">
-                解析結果將顯示於此...
-            </div>
-        </section>
 
         <!-- 資料表格區 -->
         <section class="bg-white rounded-lg shadow flex-1 overflow-hidden flex flex-col">
@@ -51,16 +39,15 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 sticky top-0 text-xs text-slate-500 uppercase">
                         <tr>
-                            <th class="p-3 border-b">單號</th>
-                            <th class="p-3 border-b">類別</th>
-                            <th class="p-3 border-b">狀態</th>
-                            <th class="p-3 border-b">摘要</th>
-                            <th class="p-3 border-b">系統對應案場</th>
-                            <th class="p-3 border-b">金額</th>
+                            <th class="p-3 border-b">傳票號碼</th>
+                            <th class="p-3 border-b">科目名稱</th>
+                            <th class="p-3 border-b">原始摘要</th>
+                            <th class="p-3 border-b">對應案場</th>
+                            <th class="p-3 border-b">借方金額</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody" class="text-sm divide-y divide-slate-100">
-                        <tr><td colspan="6" class="p-6 text-center text-slate-400">請點擊「重新同步資料」載入 Google 試算表內容</td></tr>
+                        <tr><td colspan="5" class="p-6 text-center text-slate-400">請點擊「重新同步資料」載入 Google 試算表內容</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -69,27 +56,24 @@
 
     <script>
         // 請確保這裡填入你最新的 Apps Script 網頁應用程式部署網址
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxtkMZyUgYlgmEkiSANPkPqV2z28FvhXZT9f18ToZVF8RqRHLMTA4UPqlHmD8emuTWs/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxphubu0NNSWKzIfAprb-ykOjxNwXqNkFBHzyA-BT31N9u-ctsDgkMGp7RB8Cr8f9az/exec";
         
         let allRecords = [];
-        let projectList = [];
-        let currentTab = 'main';
 
         async function loadDataFromGAS() {
             const btn = document.querySelector('button[onclick="loadDataFromGAS()"]');
-            btn.textContent = "同步中...";
+            if (btn) btn.textContent = "同步中...";
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
                 allRecords = data.records || [];
-                projectList = data.projects || [];
                 renderTable();
                 alert("資料同步成功！");
             } catch (error) {
                 console.error(error);
                 alert("同步失敗，請檢查主控台錯誤訊息。");
             } finally {
-                btn.textContent = "重新同步資料";
+                if (btn) btn.textContent = "重新同步資料";
             }
         }
 
@@ -98,53 +82,23 @@
             tbody.innerHTML = "";
             
             if (allRecords.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">目前無資料</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">目前無資料</td></tr>`;
                 return;
             }
 
-            // 略過標題列（第 0 列），從第 1 列開始渲染
             let count = 0;
-            for (let i = 1; i < allRecords.length; i++) {
-                const row = allRecords[i];
-                if (!row.some(cell => cell !== "")) continue; // 跳過空行
-                
+            allRecords.forEach(row => {
                 count++;
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="p-3 font-mono text-xs">${row[0] || '—'}</td>
-                    <td class="p-3">${row[1] || '—'}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">正常</span></td>
-                    <td class="p-3">${row[3] || row[2] || '—'}</td>
-                    <td class="p-3 text-blue-600 font-medium">${row[4] || '未指定'}</td>
-                    <td class="p-3 font-mono">${row[5] || '0'}</td>
+                    <td class="p-3 font-mono text-xs">${row.傳票號碼 || '—'}</td>
+                    <td class="p-3">${row.科目名稱 || '—'}</td>
+                    <td class="p-3">${row.原始摘要 || '—'}</td>
+                    <td class="p-3 text-blue-600 font-medium">${row.對應案場 || '未對應案場'}</td>
+                    <td class="p-3 font-mono">${row.借方金額 || '0'}</td>
                 `;
                 tbody.appendChild(tr);
-            }
+            });
             document.getElementById('tableInfo').textContent = `共載入 ${count} 筆應付帳款記錄`;
         }
-
-        function parseInput() {
-            const text = document.getElementById('rawInput').value.trim();
-            const resultDiv = document.getElementById('parseResult');
-            if (!text) {
-                resultDiv.innerHTML = `<span class="text-red-500">請先輸入摘要內容！</span>`;
-                return;
-            }
-
-            // 簡易智慧解析模擬
-            resultDiv.innerHTML = `
-                <div><strong>解析輸入：</strong> ${text}</div>
-                <div class="text-green-600 mt-1">✓ 格式初步解析完成，已自動進行 B/E 欄案場對應。</div>
-            `;
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('navMain').className = tab === 'main' ? "block py-2 px-3 rounded bg-slate-800 text-white font-medium" : "block py-2 px-3 rounded hover:bg-slate-800";
-            document.getElementById('navException').className = tab === 'exception' ? "block py-2 px-3 rounded bg-slate-800 text-white font-medium" : "block py-2 px-3 rounded hover:bg-slate-800";
-            document.getElementById('pageTitle').textContent = tab === 'main' ? "單據即時清單與智慧解析" : "人工確認專區";
-        }
-    </script>
-</body>
-</html>
