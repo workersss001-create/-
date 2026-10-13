@@ -1,508 +1,229 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>公文簽呈管理系統</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* 列印時僅印出套印表單 */
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 20px;
-        box-shadow: none !important;
-        border: none !important;
-      }
-      .no-print {
-        display: none !important;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>工程請款／付款管理系統（智慧解析與人工確認版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800">
+<body class="bg-gray-100 flex h-screen overflow-hidden">
 
-  <!-- 頂部導覽列 -->
-  <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 no-print">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <span class="text-blue-600">📄</span> 公文簽呈管理系統
-      </h1>
-      <div class="text-sm text-gray-600">
-        目前使用者：<span id="currentUser" class="font-semibold text-gray-800">楊雅淇</span>
-      </div>
-    </div>
-    
-    <!-- 功能頁籤 -->
-    <div class="max-w-4xl mx-auto px-4 flex gap-6 border-t border-gray-100 text-sm font-medium">
-      <button id="tabCreate" onclick="switchTab('create')" class="py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition">填寫簽呈單</button>
-      <button id="tabList" onclick="switchTab('list')" class="py-2.5 text-gray-500 hover:text-gray-700 transition">我的簽呈單</button>
-    </div>
-  </header>
+    <!-- 左側導覽列 -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between p-4">
+        <div>
+            <h1 class="text-white text-lg font-bold mb-6">帳務後台管理</h1>
+            <nav class="space-y-2">
+                <a href="#" onclick="switchTab('main')" id="navMain" class="block py-2 px-3 rounded bg-slate-800 text-white font-medium">單據總覽</a>
+                <a href="#" onclick="switchTab('exception')" id="navException" class="block py-2 px-3 rounded hover:bg-slate-800">
+                    人工確認專區 <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full text-white float-right" id="exceptionCount">0</span>
+                </a>
+                <a href="#" class="block py-2 px-3 rounded hover:bg-slate-800">未付清單</a>
+                <a href="#" class="block py-2 px-3 rounded hover:bg-slate-800">未收清單</a>
+            </nav>
+        </div>
+        <div class="text-xs text-slate-500">Render x Apps Script 運作中</div>
+    </aside>
 
-  <!-- 主要內容區 -->
-  <main class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 no-print">
-
-    <!-- 頁籤一：填寫簽呈單 -->
-    <div id="viewCreate">
-      <form id="signForm" class="space-y-6">
-
-        <!-- 區塊一：公文基本資料 -->
-        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 公文基本資料
-          </h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 所屬公司名稱 (根據您的基本資料試算表) -->
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">所屬公司名稱 <span class="text-red-500">*</span></label>
-              <select id="company" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="">請選擇所屬公司</option>
-                <option value="太綺水電工程有限公司">太綺水電工程有限公司</option>
-                <option value="匠人本紀永續控股股份有限公司">匠人本紀永續控股股份有限公司</option>
-                <option value="橡欣立工程有限公司">橡欣立工程有限公司</option>
-                <option value="匠人太初有限公司">匠人太初有限公司</option>
-                <option value="漆特廊塗裝股份有限公司">漆特廊塗裝股份有限公司</option>
-              </select>
+    <!-- 右側主要內容區 -->
+    <main class="flex-1 flex flex-col overflow-y-auto p-6">
+        <header class="flex justify-between items-center mb-6">
+            <h2 id="pageTitle" class="text-2xl font-bold text-slate-800">單據即時清單與智慧解析</h2>
+            <div class="space-x-2">
+                <button onclick="loadDataFromGAS()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 text-sm">重新同步資料</button>
             </div>
+        </header>
 
-            <!-- 公文類別 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">公文類別 <span class="text-red-500">*</span></label>
-              <select id="docCategory" onchange="toggleTaxSection()" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="一般公文">1. 一般公文</option>
-                <option value="稅務公文">2. 稅務公文</option>
-              </select>
+        <!-- 摘要智慧輸入與測試區 -->
+        <section class="bg-white p-4 rounded-lg shadow mb-6">
+            <h3 class="font-bold text-gray-700 mb-2 text-sm">📥 快速登錄與摘要自動解析（支援 B/E 欄案場比對）</h3>
+            <div class="flex gap-2">
+                <input type="text" id="rawSummaryInput" placeholder="請輸入摘要，例如：12/20-FU47391807-福星段-川瀚興業" class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="parseAndTestSummary()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">解析並檢查</button>
             </div>
-
-            <!-- 緊急程度 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">緊急程度 <span class="text-red-500">*</span></label>
-              <select id="urgency" class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="普通">普通</option>
-                <option value="急件">急件</option>
-                <option value="特急件">特急件</option>
-              </select>
-            </div>
-
-            <!-- 申請人 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">申請人 <span class="text-red-500">*</span></label>
-              <input type="text" id="applicant" value="楊雅淇" required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-
-            <!-- 申請部門 (固定會計部) -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">申請部門 <span class="text-red-500">*</span></label>
-              <input type="text" id="department" value="會計部" required class="w-full border border-gray-300 rounded-md p-2 bg-gray-50 focus:outline-none">
-            </div>
-
-            <!-- 申請日期 (預設當下日期) -->
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">申請日期 <span class="text-red-500">*</span></label>
-              <input type="date" id="applyDate" required class="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-          </div>
+            <div id="parseResult" class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded hidden"></div>
         </section>
 
-        <!-- 區塊二：簽呈內容 -->
-        <section class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
-            <span class="w-2 h-4 bg-blue-600 rounded-full inline-block"></span> 簽呈內容
-          </h2>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">簽呈主旨 <span class="text-red-500">*</span></label>
-              <input type="text" id="subject" placeholder="請輸入本次簽呈主旨..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">說明與詳細背景 <span class="text-red-500">*</span></label>
-              <textarea id="content" rows="4" placeholder="請詳細說明簽呈背景原因、說明事項或補充資訊..." required class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-            </div>
-          </div>
+        <!-- 主資料表格容器 -->
+        <section id="mainTableSection" class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 border-b text-xs text-gray-500 uppercase text-gray-500">
+                    <tr>
+                        <th class="p-3">單號</th>
+                        <th class="p-3">類別</th>
+                        <th class="p-3">狀態</th>
+                        <th class="p-3">摘要</th>
+                        <th class="p-3">系統對應案場</th>
+                        <th class="p-3">金額</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody" class="divide-y divide-gray-200 text-sm">
+                    <tr><td colspan="6" class="p-4 text-center text-gray-400">正在從 Google 試算表載入資料...</td></tr>
+                </tbody>
+            </table>
         </section>
 
-        <!-- 區塊三：稅務明細 (選擇稅務公文時顯示) -->
-        <section id="taxSection" class="hidden bg-purple-50/60 rounded-lg p-6 border border-purple-200 space-y-4">
-          <div class="flex justify-between items-center border-b border-purple-200 pb-3">
-            <h2 class="text-lg font-bold text-purple-900 flex items-center gap-2">
-              <span>💰</span> 稅務金額明細
-            </h2>
-            <button type="button" onclick="addTaxRow()" class="text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded transition flex items-center gap-1 shadow-sm">
-              <span>＋ 新增項目</span>
-            </button>
-          </div>
-
-          <div id="taxItemsContainer" class="space-y-3"></div>
-
-          <div class="flex justify-end items-center gap-3 pt-3 border-t border-purple-200 font-bold text-purple-900">
-            <span>合計金額：</span>
-            <span class="text-xl font-mono text-purple-700">NT$ <span id="totalAmountText">0</span></span>
-          </div>
+        <!-- 有疑慮人工確認專區容器 -->
+        <section id="exceptionTableSection" class="bg-white rounded-lg shadow overflow-hidden hidden">
+            <div class="p-4 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
+                ⚠️ 以下單據因發票格式缺漏或案場無法對應，已被系統自動隔離，請會計人工確認後下拉修正：
+            </div>
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 border-b text-xs text-gray-500 uppercase text-gray-500">
+                    <tr>
+                        <th class="p-3">單號</th>
+                        <th class="p-3">原始摘要</th>
+                        <th class="p-3">異常原因</th>
+                        <th class="p-3">手動修正案場（下拉選單）</th>
+                        <th class="p-3">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="exceptionTableBody" class="divide-y divide-gray-200 text-sm">
+                    <tr><td colspan="5" class="p-4 text-center text-gray-400">目前沒有需要人工確認的單據</td></tr>
+                </tbody>
+            </table>
         </section>
+    </main>
 
-        <!-- 底部按鈕 -->
-        <div class="pt-2">
-          <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition duration-200 flex justify-center items-center gap-2">
-            <span>送出公文簽呈</span>
-          </button>
-        </div>
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwwwYielxueSxDu0Icj6CTJdg30RU2Q9jx-VlZpAzZoP-X77udxUeHS85cUxQ_zqd-H/exec";
+        let projectList = [];
+        let allRecords = [];
+        let exceptionRecords = [];
 
-      </form>
-    </div>
-
-    <!-- 頁籤二：我的簽呈單列表 -->
-    <div id="viewList" class="hidden space-y-4">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-lg font-bold text-gray-800">歷史公文紀錄</h2>
-        <button onclick="loadSignList()" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">重新整理</button>
-      </div>
-
-      <div id="listContainer" class="space-y-3">
-        <p class="text-gray-500 text-center py-8">載入中...</p>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- 🖨️ 列印彈出視窗（Modal） -->
-  <div id="printModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start p-4 overflow-y-auto">
-    <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-6 p-6 sm:p-8 relative">
-      
-      <!-- 控制列印與關閉按鈕 -->
-      <div class="flex justify-between items-center pb-4 mb-6 border-b border-gray-200 no-print">
-        <div class="flex items-center gap-2">
-          <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded shadow text-sm flex items-center gap-1.5 transition">
-            <span>🖨️ 列印 / 存成 PDF</span>
-          </button>
-          <button onclick="closePrintModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2 rounded text-sm transition">
-            關閉
-          </button>
-        </div>
-        <span class="text-xs text-gray-400">標準公文簽呈格式</span>
-      </div>
-
-      <!-- 正式公文簽呈套印表格區域 -->
-      <div id="printArea" class="bg-white text-gray-900 font-sans space-y-5">
-        
-        <!-- 公司名稱與大標題 -->
-        <div class="text-center space-y-1 pb-3 border-b-2 border-gray-900">
-          <h1 id="p_company" class="text-2xl font-bold tracking-widest text-gray-900">太綺水電工程有限公司</h1>
-          <h2 class="text-xl font-bold tracking-wider text-gray-800">公 文 簽 呈 單</h2>
-        </div>
-
-        <!-- 基本資料表格 -->
-        <table class="w-full border-collapse border border-gray-900 text-sm">
-          <tbody>
-            <tr>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 w-24 text-center">單號</td>
-              <td id="p_docId" class="border border-gray-900 p-2.5 font-mono">---</td>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 w-24 text-center">公文類別</td>
-              <td id="p_category" class="border border-gray-900 p-2.5">---</td>
-            </tr>
-            <tr>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 text-center">申請部門</td>
-              <td id="p_department" class="border border-gray-900 p-2.5">---</td>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 text-center">緊急程度</td>
-              <td id="p_urgency" class="border border-gray-900 p-2.5">---</td>
-            </tr>
-            <tr>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 text-center">申請人</td>
-              <td id="p_applicant" class="border border-gray-900 p-2.5">---</td>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 text-center">申請日期</td>
-              <td id="p_applyDate" class="border border-gray-900 p-2.5">---</td>
-            </tr>
-            <tr>
-              <td class="border border-gray-900 bg-gray-100 font-bold p-2.5 text-center">主旨</td>
-              <td id="p_subject" colspan="3" class="border border-gray-900 p-2.5 font-bold text-base">---</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- 說明與詳細背景 -->
-        <div class="border border-gray-900 p-4 min-h-[160px] space-y-2">
-          <div class="font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">【說明與詳細背景】</div>
-          <div id="p_content" class="text-sm whitespace-pre-wrap leading-relaxed text-gray-800">---</div>
-        </div>
-
-        <!-- 稅務金額明細（稅務公文自動顯示） -->
-        <div id="p_taxBlock" class="border border-gray-900 p-4 space-y-2 hidden">
-          <div class="font-bold text-gray-900 border-b border-gray-300 pb-1 mb-2">【稅務金額明細】</div>
-          <div id="p_taxItems" class="text-sm whitespace-pre-wrap font-mono text-gray-800">---</div>
-          <div id="p_totalAmount" class="text-right font-bold text-base border-t border-gray-200 pt-2 text-purple-900">合計金額：NT$ 0</div>
-        </div>
-
-        <!-- 審核主管簽名欄 -->
-        <table class="w-full border-collapse border border-gray-900 text-sm text-center">
-          <thead>
-            <tr class="bg-gray-100 border-b border-gray-900 font-bold">
-              <th class="border border-gray-900 p-2 w-1/4">總經理</th>
-              <th class="border border-gray-900 p-2 w-1/4">審核主管</th>
-              <th class="border border-gray-900 p-2 w-1/4">部門主管</th>
-              <th class="border border-gray-900 p-2 w-1/4">申請人</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="h-24">
-              <td class="border border-gray-900 p-2"></td>
-              <td class="border border-gray-900 p-2"></td>
-              <td class="border border-gray-900 p-2"></td>
-              <td id="p_signApplicant" class="border border-gray-900 p-2 align-bottom font-bold pb-2">---</td>
-            </tr>
-          </tbody>
-        </table>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- JavaScript 邏輯 -->
-  <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyH-SkpJEcM5ies2SRbxkpIz7ul7TT1QFqYLH6QpMTfEwpR8i_gQiNKC9w3sKKEV-9J/exec";
-
-    let globalListData = [];
-
-    // 自動預設今天日期 (YYYY-MM-DD)
-    document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
-
-    function toggleTaxSection() {
-      const category = document.getElementById("docCategory").value;
-      const taxSection = document.getElementById("taxSection");
-      if (category === "稅務公文") {
-        taxSection.classList.remove("hidden");
-        if (document.querySelectorAll(".tax-row").length === 0) {
-          addTaxRow();
+        async function loadDataFromGAS() {
+            try {
+                let res = await fetch(GAS_URL);
+                let data = await res.json();
+                projectList = data.projects; 
+                allRecords = data.records;
+                
+                processAndRenderRecords(allRecords);
+            } catch (err) {
+                console.error("載入失敗", err);
+                alert("無法順利從 Google 試算表取得資料，請檢查網路或 GAS 部署狀態。");
+            }
         }
-      } else {
-        taxSection.classList.add("hidden");
-      }
-    }
 
-    function addTaxRow() {
-      const container = document.getElementById("taxItemsContainer");
-      const rowId = "tax_row_" + Date.now();
-      const div = document.createElement("div");
-      div.className = "tax-row grid grid-cols-12 gap-2 items-center bg-white p-2.5 rounded border border-purple-200 shadow-sm";
-      div.id = rowId;
+        function processAndRenderRecords(records) {
+            let tbody = document.getElementById("dataTableBody");
+            let exBody = document.getElementById("exceptionTableBody");
+            tbody.innerHTML = "";
+            exBody.innerHTML = "";
+            exceptionRecords = [];
 
-      div.innerHTML = `
-        <div class="col-span-6 sm:col-span-7">
-          <input type="text" placeholder="稅務說明項目 (如: 營業稅、所得稅...)" class="tax-desc w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-purple-500 focus:outline-none">
-        </div>
-        <div class="col-span-5 sm:col-span-4">
-          <input type="number" placeholder="金額 NT$" oninput="calculateTaxTotal()" class="tax-amount w-full border border-gray-300 rounded p-1.5 text-sm font-mono text-right focus:ring-1 focus:ring-purple-500 focus:outline-none">
-        </div>
-        <div class="col-span-1 text-center">
-          <button type="button" onclick="removeTaxRow('${rowId}')" class="text-red-500 hover:text-red-700 font-bold text-sm p-1">✕</button>
-        </div>
-      `;
+            for (let i = 1; i < records.length; i++) {
+                let row = records[i];
+                if (!row[0]) continue;
 
-      container.appendChild(div);
-    }
+                let summary = row[5] || "";
+                let invMatch = summary.match(/[A-Z]{2}\d{8}/i);
+                
+                let matchedProject = null;
+                for (let p of projectList) {
+                    if (summary.includes(p.shortName) || summary.includes(p.fullName)) {
+                        matchedProject = p.fullName;
+                        break;
+                    }
+                }
 
-    function removeTaxRow(rowId) {
-      const el = document.getElementById(rowId);
-      if (el) {
-        el.remove();
-        calculateTaxTotal();
-      }
-    }
+                let isException = (!invMatch && !summary.includes("收據") && !summary.includes("附件")) || (!matchedProject && summary !== "");
 
-    function calculateTaxTotal() {
-      let total = 0;
-      document.querySelectorAll(".tax-amount").forEach(input => {
-        const val = parseFloat(input.value) || 0;
-        total += val;
-      });
-      document.getElementById("totalAmountText").innerText = total.toLocaleString();
-    }
+                if (isException) {
+                    exceptionRecords.push({ index: i, row: row });
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium">${row[0]}</td>
+                        <td class="p-3 text-gray-600">${summary}</td>
+                        <td class="p-3 text-red-600 text-xs font-bold">⚠️ 發票或案場對應異常</td>
+                        <td class="p-3">
+                            <select id="fixProject_${i}" class="border rounded p-1 text-xs bg-white">
+                                <option value="">-- 請選擇正確案場 --` + 
+                                projectList.map(p => `<option value="${p.fullName}">${p.fullName}</option>`).join('') + `
+                            </select>
+                        </td>
+                        <td class="p-3">
+                            <button onclick="resolveException(${i})" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">確認放行</button>
+                        </td>
+                    `;
+                    exBody.appendChild(tr);
+                } else {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium">${row[0]}</td>
+                        <td class="p-3">${row[1]}</td>
+                        <td class="p-3"><span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded">${row[2] || '正常'}</span></td>
+                        <td class="p-3 text-gray-600">${summary}</td>
+                        <td class="p-3 font-medium text-slate-700">${matchedProject || row[3] || '未分類'}</td>
+                        <td class="p-3 font-semibold">NT$ ${Number(row[7] || row[6] || 0).toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
 
-    function switchTab(tab) {
-      const tabCreate = document.getElementById("tabCreate");
-      const tabList = document.getElementById("tabList");
-      const viewCreate = document.getElementById("viewCreate");
-      const viewList = document.getElementById("viewList");
+            document.getElementById("exceptionCount").innerText = exceptionRecords.length;
+            if (exceptionRecords.length === 0) {
+                exBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">目前沒有需要人工確認的單據，帳務非常乾淨！</td></tr>`;
+            }
+        }
 
-      if (tab === 'create') {
-        tabCreate.className = "py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition";
-        tabList.className = "py-2.5 text-gray-500 hover:text-gray-700 transition";
-        viewCreate.classList.remove("hidden");
-        viewList.classList.add("hidden");
-      } else {
-        tabList.className = "py-2.5 border-b-2 border-blue-600 text-blue-600 font-bold transition";
-        tabCreate.className = "py-2.5 text-gray-500 hover:text-gray-700 transition";
-        viewList.classList.remove("hidden");
-        viewCreate.classList.add("hidden");
-        loadSignList();
-      }
-    }
+        function resolveException(index) {
+            let selectElem = document.getElementById(`fixProject_${index}`);
+            let selectedVal = selectElem.value;
+            if (!selectedVal) {
+                alert("請先選擇正確的案場再放行！");
+                return;
+            }
+            alert(`已成功將此筆單據指定案場為：${selectedVal} 並放行入帳！`);
+            loadDataFromGAS(); 
+        }
 
-    async function loadSignList() {
-      const container = document.getElementById("listContainer");
-      container.innerHTML = '<p class="text-gray-500 text-center py-8">資料載入中...</p>';
+        function switchTab(tab) {
+            let mainSec = document.getElementById("mainTableSection");
+            let exSec = document.getElementById("exceptionTableSection");
+            let navMain = document.getElementById("navMain");
+            let navEx = document.getElementById("navException");
+            let title = document.getElementById("pageTitle");
 
-      try {
-        const res = await fetch(GAS_WEB_APP_URL);
-        const result = await res.json();
+            if (tab === 'main') {
+                mainSec.classList.remove("hidden");
+                exSec.classList.add("hidden");
+                navMain.className = "block py-2 px-3 rounded bg-slate-800 text-white font-medium";
+                navEx.className = "block py-2 px-3 rounded hover:bg-slate-800";
+                title.innerText = "單據即時清單與智慧解析";
+            } else {
+                mainSec.classList.add("hidden");
+                exSec.classList.remove("hidden");
+                navEx.className = "block py-2 px-3 rounded bg-slate-800 text-white font-medium";
+                navMain.className = "block py-2 px-3 rounded hover:bg-slate-800";
+                title.innerText = "人工確認專區（有疑慮單據隔離）";
+            }
+        }
 
-        if (result.status === "success" && result.data.length > 0) {
-          globalListData = result.data;
+        function parseAndTestSummary() {
+            let text = document.getElementById("rawSummaryInput").value;
+            let resultBox = document.getElementById("parseResult");
+            resultBox.classList.remove("hidden");
 
-          container.innerHTML = result.data.map((item, index) => {
-            let urgencyColor = "bg-gray-100 text-gray-700";
-            if (item.urgency === "急件") urgencyColor = "bg-orange-100 text-orange-800 border border-orange-200";
-            if (item.urgency === "特急件") urgencyColor = "bg-red-100 text-red-800 font-bold border border-red-200";
+            let dateMatch = text.match(/\d{1,2}\/\d{1,2}/);
+            let invMatch = text.match(/[A-Z]{2}\d{8}/i);
 
-            return `
-              <div class="bg-white rounded-lg p-5 border border-gray-200 shadow-sm hover:shadow transition space-y-3">
-                <div class="flex justify-between items-start border-b pb-2">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold px-2.5 py-1 rounded ${item.docCategory === '稅務公文' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
-                      ${item.docCategory}
-                    </span>
-                    <span class="text-xs px-2 py-0.5 rounded ${urgencyColor}">
-                      ${item.urgency}
-                    </span>
-                    <span class="text-xs text-gray-400 font-mono">${item.docId}</span>
-                  </div>
-                  <span class="text-xs px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">${item.status}</span>
-                </div>
+            let matchedProject = "未知案別 (將被隔離至人工確認區)";
+            for (let p of projectList) {
+                if (text.includes(p.shortName) || text.includes(p.fullName)) {
+                    matchedProject = p.fullName;
+                    break;
+                }
+            }
 
-                <div>
-                  <h3 class="font-bold text-gray-800 text-base mb-1">${item.subject}</h3>
-                  <p class="text-sm text-gray-600 line-clamp-2">${item.content}</p>
-                </div>
+            let statusColor = (invMatch && matchedProject !== "未知案別 (將被隔離至人工確認區)") ? "text-emerald-600 font-bold" : "text-amber-600 font-bold";
 
-                ${item.docCategory === '稅務公文' && item.taxItems ? `
-                  <div class="text-xs bg-purple-50 p-2.5 rounded text-purple-900 border border-purple-100 space-y-1">
-                    <div class="font-bold">💰 稅務明細：${item.taxItems}</div>
-                    <div class="text-right font-bold text-purple-700">合計金額：NT$ ${Number(item.totalAmount || 0).toLocaleString()}</div>
-                  </div>
-                ` : ''}
-
-                <div class="text-xs text-gray-500 flex flex-wrap justify-between items-center pt-2 border-t border-gray-100">
-                  <span>公司：<strong class="text-gray-700">${item.company || '太綺水電工程有限公司'}</strong> | 申請人：${item.applicant} (${item.department})</span>
-                  
-                  <button onclick="openPrintModal(${index})" class="mt-2 sm:mt-0 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 font-bold px-3 py-1 rounded transition text-xs flex items-center gap-1">
-                    <span>🖨️ 列印簽呈單</span>
-                  </button>
-                </div>
-              </div>
+            resultBox.innerHTML = `
+                <div><b>解析日期：</b> ${dateMatch ? dateMatch[0] : '⚠️ 未抓到日期'}</div>
+                <div><b>解析發票：</b> ${invMatch ? invMatch[0].toUpperCase() : '⚠️ 格式異常或收據'}</div>
+                <div class="${statusColor}"><b>對應案場：</b> ${matchedProject}</div>
             `;
-          }).join('');
-        } else {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">目前尚無任何公文紀錄。</p>';
         }
-      } catch (err) {
-        container.innerHTML = '<p class="text-red-500 text-center py-8">載入失敗，請確認網路或 API 設定！</p>';
-        console.error(err);
-      }
-    }
 
-    function openPrintModal(index) {
-      const item = globalListData[index];
-      if (!item) return;
-
-      document.getElementById('p_company').innerText = item.company || '太綺水電工程有限公司';
-      document.getElementById('p_docId').innerText = item.docId || '---';
-      document.getElementById('p_category').innerText = item.docCategory || '一般公文';
-      document.getElementById('p_department').innerText = item.department || '---';
-      document.getElementById('p_urgency').innerText = item.urgency || '普通';
-      document.getElementById('p_applicant').innerText = item.applicant || '---';
-      document.getElementById('p_signApplicant').innerText = item.applicant || '---';
-      document.getElementById('p_applyDate').innerText = item.applyDate || '---';
-      document.getElementById('p_subject').innerText = item.subject || '---';
-      document.getElementById('p_content').innerText = item.content || '---';
-
-      const taxBlock = document.getElementById('p_taxBlock');
-      if (item.docCategory === '稅務公文') {
-        taxBlock.classList.remove('hidden');
-        document.getElementById('p_taxItems').innerText = item.taxItems ? item.taxItems.split('；').join('\n') : '無明細';
-        document.getElementById('p_totalAmount').innerText = '合計金額：NT$ ' + Number(item.totalAmount || 0).toLocaleString();
-      } else {
-        taxBlock.classList.add('hidden');
-      }
-
-      document.getElementById('printModal').classList.remove('hidden');
-    }
-
-    function closePrintModal() {
-      document.getElementById('printModal').classList.add('hidden');
-    }
-
-    document.getElementById("signForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      
-      const submitBtn = document.getElementById("submitBtn");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>傳送中...</span>`;
-
-      const taxCategory = document.getElementById("docCategory").value;
-      const taxList = [];
-      let totalAmount = 0;
-
-      if (taxCategory === "稅務公文") {
-        document.querySelectorAll(".tax-row").forEach(row => {
-          const desc = row.querySelector(".tax-desc").value.trim();
-          const amt = parseFloat(row.querySelector(".tax-amount").value) || 0;
-          if (desc || amt) {
-            taxList.push(`${desc}: NT$${amt.toLocaleString()}`);
-            totalAmount += amt;
-          }
-        });
-      }
-
-      const payload = {
-        company: document.getElementById("company").value,
-        docCategory: taxCategory,
-        urgency: document.getElementById("urgency").value,
-        applicant: document.getElementById("applicant").value,
-        department: document.getElementById("department").value,
-        applyDate: document.getElementById("applyDate").value,
-        subject: document.getElementById("subject").value,
-        content: document.getElementById("content").value,
-        taxItems: taxList.join("；"),
-        totalAmount: totalAmount
-      };
-
-      try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-
-        if (result.status === "success") {
-          alert(`🎉 公文送出成功！\n公文單號：${result.docId}`);
-          document.getElementById("signForm").reset();
-          document.getElementById('applyDate').value = new Date().toISOString().split('T')[0];
-          toggleTaxSection();
-          switchTab('list');
-        } else {
-          alert("❌ 送出失敗：" + result.message);
-        }
-      } catch (err) {
-        alert("⚠️ 連線失敗，請檢查 API 網址設定！");
-        console.error(err);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>送出公文簽呈</span>`;
-      }
-    });
-  </script>
+        window.onload = loadDataFromGAS;
+    </script>
 </body>
 </html>
